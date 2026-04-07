@@ -108,6 +108,23 @@ header p {
     font-weight: 300;
 }
 
+.install-banner {
+    margin-top: 1rem;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px dashed var(--accent-teal);
+    color: var(--accent-teal);
+    animation: fadeIn 1s;
+    font-size: 0.8rem;
+    max-width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.install-banner:hover {
+    background: var(--accent-teal);
+    color: var(--bg-dark);
+}
+
 /* Tabs */
 .tabs {
     display: flex;
