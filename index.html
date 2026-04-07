@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SleepCycle Pro - Descanso Perfecto</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="cosmic-bg"></div>
+    <div class="stars"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <div class="logo-icon">🌙</div>
+                <h1>SleepCycle <span>Pro</span></h1>
+            </div>
+            <p>Calcula tus ciclos para un despertar lleno de energía</p>
+        </header>
+
+        <nav class="tabs" role="tablist">
+            <button class="tab active" id="tab-wake" onclick="setMode('wake')">Despertar</button>
+            <button class="tab" id="tab-sleep" onclick="setMode('sleep')">Dormir</button>
+            <button class="tab" id="tab-nap" onclick="setMode('nap')">Siesta</button>
+        </nav>
+
+        <main class="glass-card">
+            <div id="input-section">
+                <!-- Wake/Sleep Mode Inputs -->
+                <div id="standard-inputs">
+                    <div class="form-group slide-in">
+                        <label id="time-label" for="mainTime">¿A qué hora te vas a la cama?</label>
+                        <div class="input-wrapper">
+                            <input type="time" id="mainTime">
+                            <button class="btn btn-secondary ripple" onclick="setCurrentTime()">Ahora</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group slide-in" style="animation-delay: 0.1s;">
+                        <label for="latency">Minutos para conciliar el sueño</label>
+                        <div class="latency-control-container">
+                            <input type="number" id="latency" value="15" min="0" max="120">
+                            <div class="latency-presets">
+                                <button class="preset-btn" onclick="setLatency(10)">10m</button>
+                                <button class="preset-btn active" onclick="setLatency(15)">15m</button>
+                                <button class="preset-btn" onclick="setLatency(20)">20m</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nap Mode UI (Initially hidden) -->
+                <div id="nap-inputs" style="display: none;">
+                    <div class="nap-info slide-in">
+                        <p>Las siestas cortas mejoran la alerta y el ánimo sin causar inercia del sueño.</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary glow-pulse" id="calc-btn" onclick="calculate()">
+                    Calcular Horarios
+                </button>
+            </div>
+        </main>
+
+        <section id="results" class="results-container">
+            <h3 id="results-title">Horas recomendadas:</h3>
+            <div id="results-list"></div>
+        </section>
+
+        <footer class="app-footer">
+            <p>Optimizado para ciclos de 90 minutos</p>
+        </footer >
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('SW registered');
+                }).catch(err => {
+                    console.log('SW registration failed', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
