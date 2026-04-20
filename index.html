@@ -84,9 +84,29 @@
             <div id="results-list"></div>
         </section>
 
+        <!-- History View -->
+        <section id="history" class="history-container">
+            <div class="history-header">
+                <span class="history-title">HISTORIAL RECIENTE</span>
+                <button class="btn btn-secondary" onclick="clearHistory()" style="padding: 0.5rem 1rem; font-size: 0.7rem;">LIMPIAR</button>
+            </div>
+            <div id="history-list" class="history-list"></div>
+        </section>
+
+        <!-- Use a spacer for the floating tabs -->
+        <div style="height: 100px;"></div>
+
         <footer class="app-footer">
-            <p>Optimizado para ciclos de 90 minutos</p>
-        </footer >
+            <p>Optimizado para ciclos de 90 minutos • <span id="sync-status">Local Mode</span></p>
+        </footer>
+
+        <!-- OneUI Now Bar -->
+        <div id="now-bar" class="now-bar">
+            <div class="now-content">
+                <span class="now-label">SI DUERMES YA:</span>
+                <span id="now-estimate" class="now-value">Calculando...</span>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

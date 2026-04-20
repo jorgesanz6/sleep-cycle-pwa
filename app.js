@@ -35,10 +35,70 @@ if (installBtn) {
 window.onload = () => {
     setCurrentTime();
     setupEventListeners();
+    initHistoryDB();
+    startNowBarTimer();
 };
 
 function setupEventListeners() {
-    // Basic event setup if needed
+    // Basic event setup
+}
+
+// --- OneUI 8 Helpers ---
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = message;
+    document.body.appendChild(toast);
+    
+    hapticFeedback(20);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast(`Hora ${text} copiada al portapapeles`);
+    });
+}
+
+function smartConnectAlarm(time, desc, type) {
+    copyToClipboard(time);
+    saveToHistory(time, desc, type);
+    
+    // Intent to open Samsung/Android Clock
+    setTimeout(() => {
+        // Generic Android Clock Intent
+        window.location.href = "intent://com.android.deskclock/#Intent;scheme=android-app;end";
+        
+        setTimeout(() => {
+            if (document.hasFocus()) {
+                // Samsung Specific Intent
+                window.location.href = "intent://com.sec.android.app.clockpackage/#Intent;scheme=android-app;end";
+            }
+        }, 500);
+    }, 1500);
+}
+
+function startNowBarTimer() {
+    updateNowBar();
+    setInterval(updateNowBar, 60000); // Update every minute
+}
+
+function updateNowBar() {
+    const nowEstimate = document.getElementById('now-estimate');
+    if (!nowEstimate) return;
+
+    const now = new Date();
+    const latency = parseInt(document.getElementById('latency').value) || 15;
+    
+    // Calculate based on 5 cycles (7.5h) + latency
+    const target = new Date(now.getTime() + (450 + latency) * 60000);
+    const timeStr = formatTime(target);
+    
+    nowEstimate.innerText = `${timeStr} (7.5h)`;
 }
 
 // --- Mode Switching ---
@@ -91,6 +151,7 @@ function setLatency(val) {
         btn.classList.toggle('active', parseInt(btn.innerText) === val);
     });
     hapticFeedback(10);
+    updateNowBar(); // Refresh Now Bar
 }
 
 function hapticFeedback(ms = 30) {
@@ -185,9 +246,14 @@ function calculate() {
                 </div>
                 <div class="time-sub">${subText}</div>
             </div>
-            <div class="cycle-meta">
-                <div class="cycle-count">${mainText}</div>
-                <div class="cycle-hours">de sueño</div>
+            <div class="cycle-actions">
+                <div class="cycle-meta">
+                    <div class="cycle-count">${mainText}</div>
+                    <div class="cycle-hours">de sueño</div>
+                </div>
+                <button class="btn-alarm ripple" onclick="smartConnectAlarm('${displayTime}', '${mainText}', '${currentMode}')" title="Configurar Alarma">
+                    ⏰
+                </button>
             </div>
         `;
         resultsList.appendChild(item);
@@ -199,4 +265,94 @@ function calculate() {
     setTimeout(() => {
         resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
+}
+
+// --- IndexedDB Logic ---
+let db;
+function initHistoryDB() {
+    const request = indexedDB.open('SleepCycleHistory', 1);
+    
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains('logs')) {
+            db.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
+        }
+    };
+    
+    request.onsuccess = (e) => {
+        db = e.target.result;
+        renderHistory();
+        const status = document.getElementById('sync-status');
+        if (status) status.innerText = "Historial Activo";
+    };
+}
+
+function saveToHistory(time, desc, type) {
+    if (!db) return;
+    
+    const log = {
+        time,
+        desc,
+        type,
+        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+        timestamp: new Date().getTime()
+    };
+    
+    const transaction = db.transaction(['logs'], 'readwrite');
+    const store = transaction.objectStore('logs');
+    store.add(log);
+    
+    transaction.oncomplete = () => {
+        renderHistory();
+    };
+}
+
+function renderHistory() {
+    if (!db) return;
+    
+    const historyList = document.getElementById('history-list');
+    const historyContainer = document.getElementById('history');
+    if (!historyList) return;
+    
+    const transaction = db.transaction(['logs'], 'readonly');
+    const store = transaction.objectStore('logs');
+    const request = store.getAll();
+    
+    request.onsuccess = () => {
+        const logs = request.result.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+        
+        if (logs.length > 0) {
+            if (historyContainer) historyContainer.style.display = 'block';
+            historyList.innerHTML = '';
+            
+            logs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-time-box">
+                        <span class="history-time">${log.time}</span>
+                        <span class="history-details">${log.desc} (${log.type})</span>
+                    </div>
+                    <span class="history-date">${log.date}</span>
+                `;
+                historyList.appendChild(item);
+            });
+        } else {
+            if (historyContainer) historyContainer.style.display = 'none';
+        }
+    };
+}
+
+function clearHistory() {
+    if (!db) return;
+    if (!confirm("¿Borrar todo el historial?")) return;
+    
+    const transaction = db.transaction(['logs'], 'readwrite');
+    const store = transaction.objectStore('logs');
+    store.clear();
+    
+    transaction.oncomplete = () => {
+        renderHistory();
+        showToast("Historial borrado");
+    };
 }

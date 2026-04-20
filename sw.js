@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sleepcycle-pro-v2';
-const assets = [
+const CACHE_NAME = 'sleep-cycle-v1';
+const ASSETS = [
   './',
   './index.html',
   './style.css',
@@ -13,7 +13,7 @@ const assets = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(assets);
+      return cache.addAll(ASSETS);
     })
   );
 });
